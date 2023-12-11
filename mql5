@@ -1,0 +1,79 @@
+
+//+------------------------------------------------------------------+
+//|                       Aura Black Edition MT5                      |
+//|                   Developed by Forex Robot Easy Team              |
+//|                 Developer's site: forexroboteasy.com              |
+//+------------------------------------------------------------------+
+
+// Include necessary libraries and define constants
+#include <Trade\Trade.mqh>
+#include <ANN\ann.mqh>
+
+#define SYMBOL 'XAUUSD'
+#define LOT_SIZE 0.01
+#define MAX_RISK 0.02
+#define STOP_LOSS 100
+#define TAKE_PROFIT 200
+#define TRAILING_STOP 50
+
+// Initialize global variables
+CTrade trade;
+CANN mlp;
+
+//+------------------------------------------------------------------+
+//|                  Expert Advisor Initialization                   |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+    // Set trading settings
+    trade.SetExpertMagicNumber(123456);
+    trade.SetStopLoss(STOP_LOSS);
+    trade.SetTakeProfit(TAKE_PROFIT);
+    trade.SetTrailingStop(TRAILING_STOP);
+    
+    // Train the neural network
+    mlp.Train();
+    
+    return(INIT_SUCCEEDED);
+}
+
+//+------------------------------------------------------------------+
+//|                    Expert Advisor Execution                       |
+//+------------------------------------------------------------------+
+void OnTick()
+{
+    // Check if there are any open trades
+    if(trade.Total() > 0)
+    {
+        // Manage open trades
+        trade.ManageTrades();
+    }
+    else
+    {
+        // Analyze market data and make trading decisions
+        double prediction = mlp.Predict();
+        
+        if(prediction > 0)
+        {
+            // Buy signal
+            trade.Buy(SYMBOL, LOT_SIZE);
+        }
+        else if(prediction < 0)
+        {
+            // Sell signal
+            trade.Sell(SYMBOL, LOT_SIZE);
+        }
+    }
+}
+
+//+------------------------------------------------------------------+
+//|                      Expert Advisor Deinitialization              |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+{
+    // Display performance statistics
+    double profit = trade.Profit();
+    double equity = trade.Equity();
+    Print('Profit: ', profit);
+    Print('Equity: ', equity);
+}
